@@ -1,0 +1,23 @@
+# Virtual environment
+venv/
+
+# User data — session tokens and scan history (personal/sensitive)
+data/
+
+# Reference images — personal photos, not for the repo
+reference_images/
+
+# PyInstaller output
+dist/
+build/
+Output/
+*.spec.bak
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# OS files
+.DS_Store
+Thumbs.db
