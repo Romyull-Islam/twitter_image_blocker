@@ -21,6 +21,7 @@ a = Analysis(
         "playwright._impl._driver",
         "requests",
         "browser_utils",
+        "playwright_stealth",
     ],
     hookspath=[],
     runtime_hooks=[],

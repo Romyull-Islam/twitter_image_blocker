@@ -3,3 +3,4 @@ Pillow
 imagehash
 requests
 customtkinter
+playwright-stealth
