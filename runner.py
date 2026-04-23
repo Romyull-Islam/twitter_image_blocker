@@ -62,11 +62,12 @@ async def run_scan(log_queue: q_module.Queue, stop_event):
         # ── Auth ──────────────────────────────────────────────────────────────
         log("Opening browser for login...")
         status("Authenticating")
-        browser, context, page = await login(pw, log=log)
+        browser, context, page, my_username = await login(pw, log=log)
 
-        my_username = await get_my_username(page)
         if not my_username:
-            error("Could not detect your username.\nDelete data/session.json and try again.")
+            my_username = await get_my_username(page)
+        if not my_username:
+            error("Could not detect your username.\nPlease log in again.")
             await browser.close()
             return
         log(f"Logged in as: @{my_username}\n")
