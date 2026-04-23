@@ -4,12 +4,15 @@ import config
 from browser_utils import find_system_chrome
 
 
-async def login(playwright):
+async def login(playwright, log=print):
     """Launch browser, restore session if available, otherwise prompt manual login."""
     launch_kwargs = {"headless": False, "slow_mo": 50}
     system_chrome = find_system_chrome()
     if system_chrome:
         launch_kwargs["executable_path"] = system_chrome
+        log(f"[browser] Using system Chrome: {system_chrome}")
+    else:
+        log("[browser] Using Playwright's Chromium")
 
     browser = await playwright.chromium.launch(**launch_kwargs)
 
@@ -23,19 +26,18 @@ async def login(playwright):
         await page.wait_for_timeout(3000)
 
         if 'login' not in page.url and 'x.com' in page.url:
-            print("[auth] Restored saved session.")
+            log("[auth] Session restored — no login needed.")
             return browser, context, page
 
-        print("[auth] Saved session expired.")
+        log("[auth] Session expired — please log in again.")
         await context.close()
 
     # Fresh login
     context = await browser.new_context()
     page = await context.new_page()
     await page.goto('https://x.com/login', wait_until='domcontentloaded')
-
-    print("\n[auth] Please log in to X.com in the browser window that just opened.")
-    print("[auth] The script will continue automatically once you are logged in.\n")
+    log("[auth] Browser opened — please log in to X.com.")
+    log("[auth] The scan will start automatically after you log in.")
 
     # Wait until redirected away from login (up to 3 minutes)
     await page.wait_for_function(
@@ -49,7 +51,7 @@ async def login(playwright):
     state = await context.storage_state()
     with open(config.SESSION_FILE, 'w') as f:
         json.dump(state, f)
-    print("[auth] Session saved for future runs.")
+    log("[auth] Login successful — session saved for future runs.")
 
     return browser, context, page
 

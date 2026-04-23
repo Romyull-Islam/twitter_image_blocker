@@ -62,7 +62,7 @@ async def run_scan(log_queue: q_module.Queue, stop_event):
         # ── Auth ──────────────────────────────────────────────────────────────
         log("Opening browser for login...")
         status("Authenticating")
-        browser, context, page = await login(pw)
+        browser, context, page = await login(pw, log=log)
 
         my_username = await get_my_username(page)
         if not my_username:

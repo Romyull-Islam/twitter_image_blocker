@@ -12,7 +12,7 @@ a = Analysis(
     ["app.py"],
     pathex=["."],
     binaries=ctk_binaries,
-    datas=ctk_datas,
+    datas=ctk_datas + [("icon.ico", ".")],
     hiddenimports=ctk_hiddenimports + [
         "PIL",
         "PIL._tkinter_finder",

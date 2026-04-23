@@ -7,8 +7,6 @@ import asyncio
 import os
 import queue
 import shutil
-import subprocess
-import sys
 import threading
 from tkinter import filedialog, messagebox
 
@@ -35,6 +33,11 @@ class App(ctk.CTk):
         self.title("X.com Profile Photo Blocker")
         self.geometry("960x720")
         self.minsize(820, 620)
+
+        # Set window icon
+        _icon = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icon.ico")
+        if os.path.exists(_icon):
+            self.iconbitmap(_icon)
 
         self._log_queue   = queue.Queue()
         self._stop_event  = threading.Event()
