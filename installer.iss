@@ -38,7 +38,7 @@ Source: "dist\XPhotoBlocker\*"; DestDir: "{app}"; Flags: ignoreversion recursesu
 Name: "{group}\{#AppName}";      Filename: "{app}\{#AppExeName}"
 Name: "{group}\Uninstall {#AppName}"; Filename: "{uninstallexe}"
 ; Desktop shortcut (optional)
-Name: "{commondesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
+Name: "{userdesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
 
 [Run]
 ; Offer to launch after install
