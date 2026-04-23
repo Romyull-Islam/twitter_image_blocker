@@ -99,28 +99,46 @@ async def run_scan(log_queue: q_module.Queue, stop_event):
         log(f"→ {len(following)} following collected")
 
         # ── Second-level expansion ────────────────────────────────────────────
+        # Fetch both followers AND following of each first-level account
         status("Expanding network")
         expand_targets = [
             u for u in list(users_to_scan.values())[:config.MAX_SECOND_LEVEL_USERS]
             if u['username'] not in scanned_users
         ]
-        log(f"\nExpanding {len(expand_targets)} accounts one level deeper...")
+        log(f"\nExpanding {len(expand_targets)} accounts one level deeper "
+            f"(followers + following of each)...")
+
+        def _add_users(user_list):
+            added = 0
+            for u in user_list:
+                if u['username'] not in users_to_scan:
+                    users_to_scan[u['username']] = u
+                    added += 1
+            return added
 
         for i, user in enumerate(expand_targets, 1):
             if stop_event.is_set():
                 break
             uname = user['username']
-            log(f"[{i}/{len(expand_targets)}] @{uname} followers...")
+
+            # Followers of this account
+            log(f"[{i}/{len(expand_targets)}] @{uname} — fetching followers...")
             try:
                 sub = await get_followers(page, uname, config.MAX_SECOND_LEVEL_PER_USER)
-                added = sum(
-                    1 for u in sub
-                    if u['username'] not in users_to_scan
-                    and not users_to_scan.update({u['username']: u})  # side-effect update
-                )
-                log(f"   → {added} new accounts added")
+                log(f"   → {_add_users(sub)} new accounts from followers")
             except Exception as e:
-                log(f"   → Skipped ({e})")
+                log(f"   → followers skipped ({e})")
+
+            if stop_event.is_set():
+                break
+
+            # Following of this account
+            log(f"[{i}/{len(expand_targets)}] @{uname} — fetching following...")
+            try:
+                sub = await get_following(page, uname, config.MAX_SECOND_LEVEL_PER_USER)
+                log(f"   → {_add_users(sub)} new accounts from following")
+            except Exception as e:
+                log(f"   → following skipped ({e})")
 
         users_to_scan.pop(my_username, None)
         total = len(users_to_scan)
