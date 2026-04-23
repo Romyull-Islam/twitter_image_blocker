@@ -8,12 +8,15 @@ block_cipher = None
 # Collect all customtkinter assets (themes, fonts, images)
 ctk_datas, ctk_binaries, ctk_hiddenimports = collect_all("customtkinter")
 
+# Collect playwright_stealth JS files
+stealth_datas, stealth_binaries, stealth_hiddenimports = collect_all("playwright_stealth")
+
 a = Analysis(
     ["app.py"],
     pathex=["."],
-    binaries=ctk_binaries,
-    datas=ctk_datas + [("icon.ico", ".")],
-    hiddenimports=ctk_hiddenimports + [
+    binaries=ctk_binaries + stealth_binaries,
+    datas=ctk_datas + stealth_datas + [("icon.ico", ".")],
+    hiddenimports=ctk_hiddenimports + stealth_hiddenimports + [
         "PIL",
         "PIL._tkinter_finder",
         "imagehash",
