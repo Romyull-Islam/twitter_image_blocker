@@ -126,6 +126,10 @@ class App(ctk.CTk):
         )
         self._status_lbl.pack(side="right", padx=18)
 
+        # ── action bar — must be packed BEFORE the expanding middle area ────────
+        bar = ctk.CTkFrame(self, fg_color=BG_CARD, corner_radius=0)
+        bar.pack(fill="x", side="bottom")
+
         # ── two-column middle area ────────────────────────────────────────────
         mid = ctk.CTkFrame(self, fg_color="transparent")
         mid.pack(fill="both", expand=True, padx=16, pady=12)
@@ -135,10 +139,6 @@ class App(ctk.CTk):
 
         self._build_left_panel(mid)
         self._build_right_panel(mid)
-
-        # ── action bar ───────────────────────────────────────────────────────
-        bar = ctk.CTkFrame(self, fg_color=BG_CARD, corner_radius=0)
-        bar.pack(fill="x", side="bottom")
 
         self._start_btn = ctk.CTkButton(
             bar, text="▶  Start Scan",
