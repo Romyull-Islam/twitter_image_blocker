@@ -3,10 +3,25 @@ import os
 import config
 from browser_utils import find_system_chrome
 
+USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/124.0.0.0 Safari/537.36"
+)
+
 
 async def login(playwright, log=print):
     """Launch browser, restore session if available, otherwise prompt manual login."""
-    launch_kwargs = {"headless": False, "slow_mo": 50}
+    launch_kwargs = {
+        "headless": False,
+        "slow_mo": 50,
+        "args": [
+            "--disable-blink-features=AutomationControlled",
+            "--no-sandbox",
+            "--disable-dev-shm-usage",
+        ],
+    }
+
     system_chrome = find_system_chrome()
     if system_chrome:
         launch_kwargs["executable_path"] = system_chrome
@@ -16,11 +31,14 @@ async def login(playwright, log=print):
 
     browser = await playwright.chromium.launch(**launch_kwargs)
 
+    context_kwargs = {"user_agent": USER_AGENT}
+
     # Try restoring saved session
     if os.path.exists(config.SESSION_FILE):
         with open(config.SESSION_FILE) as f:
             storage_state = json.load(f)
-        context = await browser.new_context(storage_state=storage_state)
+        context_kwargs["storage_state"] = storage_state
+        context = await browser.new_context(**context_kwargs)
         page = await context.new_page()
         await page.goto('https://x.com/home', wait_until='domcontentloaded')
         await page.wait_for_timeout(3000)
@@ -33,10 +51,16 @@ async def login(playwright, log=print):
         await context.close()
 
     # Fresh login
-    context = await browser.new_context()
+    context = await browser.new_context(**context_kwargs)
+    # Hide automation flags from JavaScript
+    await context.add_init_script(
+        "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
+    )
     page = await context.new_page()
     await page.goto('https://x.com/login', wait_until='domcontentloaded')
-    log("[auth] Browser opened — please log in to X.com.")
+
+    log("[auth] Browser opened — please log in to X.com with your email/password.")
+    log("[auth] Do NOT use 'Sign in with Google' — type your email and password directly.")
     log("[auth] The scan will start automatically after you log in.")
 
     # Wait until redirected away from login (up to 3 minutes)
