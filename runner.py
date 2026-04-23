@@ -46,7 +46,7 @@ async def run_scan(log_queue: q_module.Queue, stop_event):
 
     # Load reference images
     log("Loading reference images...")
-    matcher = ImageMatcher()
+    matcher = ImageMatcher(log=log)
     if not matcher.reference_hashes:
         error("No reference images found. Add images in the app first.")
         return
@@ -168,7 +168,7 @@ async def run_scan(log_queue: q_module.Queue, stop_event):
 
             if is_match:
                 log(f"[MATCH] @{username}  →  '{matched_ref}'")
-                success = await block_user(page, username)
+                success = await block_user(page, username, log=log)
                 if success:
                     blocked_users[username] = matched_ref
                     block_count += 1

@@ -2,7 +2,9 @@ import json
 import os
 import config
 from browser_utils import find_system_chrome
-from playwright_stealth import stealth_async
+from playwright_stealth import Stealth
+
+_stealth = Stealth()
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -41,7 +43,7 @@ async def login(playwright, log=print):
                 storage_state = json.load(f)
             ctx = await browser.new_context(storage_state=storage_state, **context_kwargs)
             page = await ctx.new_page()
-            await stealth_async(page)
+            await _stealth.apply_stealth_async(page)
             await page.goto('https://x.com/home', wait_until='domcontentloaded')
             await page.wait_for_timeout(3000)
 
@@ -61,7 +63,7 @@ async def login(playwright, log=print):
     # ── Fresh login ───────────────────────────────────────────────────────────
     ctx = await browser.new_context(**context_kwargs)
     page = await ctx.new_page()
-    await stealth_async(page)
+    await _stealth.apply_stealth_async(page)
     await page.goto('https://x.com/login', wait_until='domcontentloaded')
 
     log("[auth] Browser opened — please log in to X.com.")

@@ -1,6 +1,6 @@
-playwright
-Pillow
-imagehash
-requests
-customtkinter
-playwright-stealth
+playwright>=1.40.0
+Pillow>=10.0.0
+imagehash>=4.3.0
+requests>=2.30.0
+customtkinter>=5.2.0
+playwright-stealth>=2.0.0

@@ -7,7 +7,8 @@ import config
 
 
 class ImageMatcher:
-    def __init__(self):
+    def __init__(self, log=print):
+        self.log = log
         self.reference_hashes = []
         self._load_references()
 
@@ -23,12 +24,11 @@ class ImageMatcher:
                 img = Image.open(filepath).convert('RGB')
                 h = imagehash.phash(img)
                 self.reference_hashes.append((filename, h))
-                print(f"  [ref] Loaded: {filename}")
+                self.log(f"  [ref] Loaded: {filename}")
             except Exception as e:
-                print(f"  [ref] Failed to load {filename}: {e}")
+                self.log(f"  [ref] Failed to load {filename}: {e}")
 
     def _fetch_image(self, url):
-        # Upgrade thumbnail URL to a larger size for better matching
         url = (url
                .replace('_normal.', '_400x400.')
                .replace('_bigger.', '_400x400.')

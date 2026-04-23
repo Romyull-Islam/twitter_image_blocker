@@ -7,6 +7,7 @@ import asyncio
 import os
 import queue
 import shutil
+import sys
 import threading
 from tkinter import filedialog, messagebox
 
@@ -34,10 +35,17 @@ class App(ctk.CTk):
         self.geometry("960x720")
         self.minsize(820, 620)
 
-        # Set window icon
-        _icon = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icon.ico")
+        # Set window icon — handles both dev and PyInstaller frozen contexts
+        if getattr(sys, "frozen", False):
+            _base = getattr(sys, "_MEIPASS", os.path.dirname(sys.executable))
+        else:
+            _base = os.path.dirname(os.path.abspath(__file__))
+        _icon = os.path.join(_base, "icon.ico")
         if os.path.exists(_icon):
-            self.iconbitmap(_icon)
+            try:
+                self.iconbitmap(_icon)
+            except Exception:
+                pass
 
         self._log_queue   = queue.Queue()
         self._stop_event  = threading.Event()
@@ -389,26 +397,26 @@ class App(ctk.CTk):
     # ── Queue polling ─────────────────────────────────────────────────────────
 
     def _poll_queue(self):
-        try:
-            while True:
+        while True:
+            try:
                 item = self._log_queue.get_nowait()
-                t = item['type']
-                if t == 'log':
-                    self._append_log(item['message'])
-                elif t == 'status':
-                    self._set_status(item['message'])
-                elif t == 'stats':
-                    self._stats_lbl.configure(
-                        text=f"Scanned: {item['scanned']}  |  Blocked: {item['blocked']}"
-                    )
-                elif t == 'done':
-                    self._append_log("\n" + item['message'])
-                    self._on_done()
-                elif t == 'error':
-                    self._on_done()
-                    messagebox.showerror("Error", item['message'])
-        except Exception:
-            pass
+            except queue.Empty:
+                break
+            t = item.get('type')
+            if t == 'log':
+                self._append_log(item['message'])
+            elif t == 'status':
+                self._set_status(item['message'])
+            elif t == 'stats':
+                self._stats_lbl.configure(
+                    text=f"Scanned: {item['scanned']}  |  Blocked: {item['blocked']}"
+                )
+            elif t == 'done':
+                self._append_log("\n" + item['message'])
+                self._on_done()
+            elif t == 'error':
+                self._on_done()
+                messagebox.showerror("Error", item['message'])
         self.after(150, self._poll_queue)
 
     # ── Helpers ───────────────────────────────────────────────────────────────

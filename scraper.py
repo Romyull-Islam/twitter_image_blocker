@@ -24,6 +24,8 @@ async def _scroll_and_collect(page, max_count):
             username = None
             for a in anchors:
                 href = await a.get_attribute('href')
+                if not href:
+                    continue
                 parts = href.strip('/').split('/')
                 # Ignore links like /i/..., /settings/..., etc.
                 if len(parts) == 1 and parts[0] and not parts[0].startswith('i'):

@@ -1,30 +1,26 @@
 # PyInstaller spec file — run with: pyinstaller build.spec
 
 import os
-from PyInstaller.utils.hooks import collect_all, collect_data_files
+from PyInstaller.utils.hooks import collect_all
 
 block_cipher = None
 
-# Collect all customtkinter assets (themes, fonts, images)
-ctk_datas, ctk_binaries, ctk_hiddenimports = collect_all("customtkinter")
-
-# Collect playwright_stealth JS files
-stealth_datas, stealth_binaries, stealth_hiddenimports = collect_all("playwright_stealth")
+# Collect all assets for packages that ship data/JS/binaries
+ctk_datas,      ctk_binaries,      ctk_hidden      = collect_all("customtkinter")
+stealth_datas,  stealth_binaries,  stealth_hidden  = collect_all("playwright_stealth")
+pw_datas,       pw_binaries,       pw_hidden       = collect_all("playwright")
 
 a = Analysis(
     ["app.py"],
     pathex=["."],
-    binaries=ctk_binaries + stealth_binaries,
-    datas=ctk_datas + stealth_datas + [("icon.ico", ".")],
-    hiddenimports=ctk_hiddenimports + stealth_hiddenimports + [
+    binaries=ctk_binaries + stealth_binaries + pw_binaries,
+    datas=ctk_datas + stealth_datas + pw_datas + [("icon.ico", ".")],
+    hiddenimports=ctk_hidden + stealth_hidden + pw_hidden + [
         "PIL",
         "PIL._tkinter_finder",
         "imagehash",
-        "playwright",
-        "playwright._impl._driver",
         "requests",
         "browser_utils",
-        "playwright_stealth",
     ],
     hookspath=[],
     runtime_hooks=[],
@@ -44,7 +40,7 @@ exe = EXE(
     debug=False,
     strip=False,
     upx=True,
-    console=False,          # no black terminal window
+    console=False,
     icon="icon.ico" if os.path.exists("icon.ico") else None,
 )
 
