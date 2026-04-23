@@ -1,11 +1,17 @@
 import json
 import os
 import config
+from browser_utils import find_system_chrome
 
 
 async def login(playwright):
     """Launch browser, restore session if available, otherwise prompt manual login."""
-    browser = await playwright.chromium.launch(headless=False, slow_mo=50)
+    launch_kwargs = {"headless": False, "slow_mo": 50}
+    system_chrome = find_system_chrome()
+    if system_chrome:
+        launch_kwargs["executable_path"] = system_chrome
+
+    browser = await playwright.chromium.launch(**launch_kwargs)
 
     # Try restoring saved session
     if os.path.exists(config.SESSION_FILE):

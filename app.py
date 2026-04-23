@@ -17,6 +17,7 @@ from PIL import Image
 
 import config
 from runner import run_scan
+from browser_utils import find_system_chrome, any_browser_available, install_playwright_chromium
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
@@ -45,25 +46,22 @@ class App(ctk.CTk):
         self._poll_queue()
         self.after(200, self._check_chromium)
 
-    # ── First-run Chromium setup ──────────────────────────────────────────────
-
-    def _chromium_installed(self):
-        try:
-            from playwright.sync_api import sync_playwright
-            with sync_playwright() as p:
-                return os.path.exists(p.chromium.executable_path)
-        except Exception:
-            return False
+    # ── First-run browser setup ───────────────────────────────────────────────
 
     def _check_chromium(self):
-        if self._chromium_installed():
+        sys_chrome = find_system_chrome()
+        if sys_chrome:
+            self._append_log(f"[setup] Using system browser: {sys_chrome}")
+            return
+        if any_browser_available():
+            self._append_log("[setup] Playwright Chromium is ready.")
             return
         self._show_chromium_setup()
 
     def _show_chromium_setup(self):
         dialog = ctk.CTkToplevel(self)
         dialog.title("First-time Setup")
-        dialog.geometry("420x220")
+        dialog.geometry("440x230")
         dialog.resizable(False, False)
         dialog.grab_set()
         dialog.lift()
@@ -76,33 +74,33 @@ class App(ctk.CTk):
 
         ctk.CTkLabel(
             dialog,
-            text="The app needs Chromium to automate X.com.\nThis downloads once (~170 MB) and never again.",
+            text="No browser found on this PC.\n"
+                 "The app will download Chromium once (~170 MB) and never again.",
             font=ctk.CTkFont(size=11),
             text_color=FG_DIM,
             justify="center",
         ).pack(pady=(0, 16))
 
-        bar = ctk.CTkProgressBar(dialog, width=340, mode="indeterminate")
+        bar = ctk.CTkProgressBar(dialog, width=360, mode="indeterminate")
         bar.pack(pady=(0, 10))
         bar.start()
 
-        status = ctk.CTkLabel(dialog, text="Downloading...", font=ctk.CTkFont(size=11), text_color=FG_DIM)
-        status.pack()
+        ctk.CTkLabel(
+            dialog, text="Downloading...", font=ctk.CTkFont(size=11), text_color=FG_DIM
+        ).pack()
 
         def _do_install():
             try:
-                subprocess.run(
-                    [sys.executable, "-m", "playwright", "install", "chromium"],
-                    check=True,
-                    capture_output=True,
-                )
+                install_playwright_chromium()
                 self.after(0, lambda: (bar.stop(), dialog.destroy(),
-                                       self._append_log("[setup] Chromium ready.")))
+                                       self._append_log("[setup] Chromium downloaded and ready.")))
             except Exception as e:
                 self.after(0, lambda: (bar.stop(), dialog.destroy(),
-                                       messagebox.showerror("Setup Failed",
+                                       messagebox.showerror(
+                                           "Setup Failed",
                                            f"Could not download Chromium:\n{e}\n\n"
-                                           "Check your internet connection and restart the app.")))
+                                           "Check your internet connection and restart the app."
+                                       )))
 
         threading.Thread(target=_do_install, daemon=True).start()
 
